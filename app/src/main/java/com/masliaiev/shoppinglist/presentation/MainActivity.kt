@@ -1,30 +1,37 @@
 package com.masliaiev.shoppinglist.presentation
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.masliaiev.shoppinglist.R
 import com.masliaiev.shoppinglist.databinding.ActivityMainBinding
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
 
     private lateinit var viewModel: MainViewModel
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelFactory
+
     private lateinit var adapter: ShopListAdapter
     private lateinit var binding: ActivityMainBinding
 
+    private val component by lazy {
+        (application as ShoppingListApp).component
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        component.inject(this)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupRecyclerView()
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
         viewModel.shopList.observe(this) {
             adapter.shopList = it
         }
@@ -43,11 +50,11 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
         supportFragmentManager.popBackStack()
     }
 
-    private fun isOnePaneMode (): Boolean {
+    private fun isOnePaneMode(): Boolean {
         return binding.shopItemContainer == null
     }
 
-    private fun launchFragment (fragment: Fragment) {
+    private fun launchFragment(fragment: Fragment) {
         supportFragmentManager.popBackStack()
         supportFragmentManager.beginTransaction()
             .replace(R.id.shop_item_container, fragment)
